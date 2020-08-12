@@ -8,14 +8,26 @@ function loadTask() {
   task[0].variables = {};
   task[0].variables.consent = NaN;
 
-  // INSTRUCTIONS
+  // // SURVEY DEMOGRAPHICS
   task[1] = {};
-  task[1].type = 'instructions';
+  task[1].type = 'survey';
+  // survey is a default type with no callbacks
+  // the demographics survey is a default type
+  task[1].surveys = ['survey-demo'];
   task[1].variables = {};
-  task[1].instructions = ['instruct-1', 'instruct-2', 'instruct-3', 'instruct-4'];
+  // the default survey type needs an answer list that we can push to
+  // as we get answers
+  // if we don't set this it will be done automatically
+  task[1].variables.answers = [];
+
+  // INSTRUCTIONS
+  task[2] = {};
+  task[2].type = 'instructions';
+  task[2].variables = {};
+  task[2].instructions = ['instruct-1', 'instruct-2', 'instruct-3', 'instruct-4'];
 
   // PRACTICE TRIALS
-  task[2] = addTaskBlock(5, 1);
+  // task[2] = addTaskBlock(5, 1);
 
   //Number of trials per block
   nTrialsPerBlock = 20;
