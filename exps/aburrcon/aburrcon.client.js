@@ -27,10 +27,10 @@ function loadTask() {
   task[2].instructions = ['instruct-1', 'instruct-2', 'instruct-3', 'instruct-4'];
 
   // PRACTICE TRIALS
-  task[3] = addTaskBlock(1, 1);
+  task[3] = addTaskBlock(5, 1, "high");
 
   //Number of trials per block
-  nTrialsPerBlock = 1;
+  nTrialsPerBlock = 40;
   // INSTRUCTIONS BEFORE BEGINNING REAL TRIALS 
   task[4] = {};
   task[4].type = 'instructions';
@@ -38,7 +38,7 @@ function loadTask() {
   task[4].instructions = ['instruct-block1'];
 
   // Start the real task: 20 trial blocks
-  task[5] = addTaskBlock(nTrialsPerBlock, 0);
+  task[5] = addTaskBlock(nTrialsPerBlock, 0, "low");
 
   // First break
   task[6] = {};
@@ -46,26 +46,26 @@ function loadTask() {
   task[6].variables = {};
   task[6].instructions = ['instruct-block2'];
 
-  task[7] = addTaskBlock(nTrialsPerBlock, 0);
+  task[7] = addTaskBlock(nTrialsPerBlock, 0, "high");
 
   task[8] = {};
   task[8].type = 'instructions';
   task[8].variables = {};
   task[8].instructions = ['instruct-block3'];
 
-  task[9] = addTaskBlock(nTrialsPerBlock, 0);
+  task[9] = addTaskBlock(nTrialsPerBlock, 0, "low");
 
   task[10] = {};
   task[10].type = 'instructions';
   task[10].variables = {};
   task[10].instructions = ['instruct-block4'];
 
-  task[11] = addTaskBlock(nTrialsPerBlock, 0);
+  task[11] = addTaskBlock(nTrialsPerBlock, 0, "high");
 
   return task;
 }
 
-function addTaskBlock(numTrials, practice) {
+function addTaskBlock(numTrials, practice, runtype) {
   taskblock = {};
   taskblock.type = 'trial'; // this will give us use of the canvas
 
@@ -79,33 +79,38 @@ function addTaskBlock(numTrials, practice) {
   // Task parameters which get automatically assigned on each trial.
   taskblock.parameters = {};
   taskblock.parameters.practice = practice;
+  taskblock.parameters.runtype = runtype;
   
+  if (runtype=="high"){
+    task.parameters.posdiff = [-15, -11, -9, 9, 11, 15];
+    window.posdiff = [-15, -11, -9, 9, 11, 15];
+  } else{
+    task.parameters.possdiff = [-2, -5, -9, 9, 5, 2];
+    window.posdiff = [-2, -5, -9, 9, 5, 2];
+  }
+
   // Task Variables which get set on each trial
   taskblock.variables = {};
   taskblock.variables.key = NaN;
   taskblock.variables.correct = NaN;
-  taskblock.variables.target_position = NaN;
-  taskblock.variables.img_idx = NaN;
-  taskblock.variables.img_name = NaN;
-  taskblock.variables.layer_idx = NaN;
-  taskblock.variables.layer_name = NaN;
-  taskblock.variables.pool_idx = NaN;
-  taskblock.variables.poolsize = NaN;
-  taskblock.variables.origPresent = NaN;
+  taskblock.variables.difference = NaN;
+  taskblock.variables.initialConfidence = NaN;
+  taskblock.variables.confidence = NaN;
+ 
 
   // Segment timing
-  taskblock.segnames = ['delay','stim','feedback', 'iti'];
-  taskblock.segmin = [500, 2000, 500, 500];
-  taskblock.segmax = [500, 2000, 500, 500];
+  taskblock.segnames = ['fixation','stim1','ISI', 'stim2', "response", "confdence", "ITI"];
+  taskblock.segmin = [1000, 10, 500, 10, 2000, 20000, 1000];
+  taskblock.segmax = [1000, 10, 500, 10, 2000, 20000, 1000];
 
   // Responses - which segments should we look for a response.
-  taskblock.response = [0,1,0,0];
+  taskblock.response = [0, 0, 0, 0, 1, 1, 0];
 
   // Trials
   taskblock.numTrials = numTrials; // Specify number of trials according to input.
 
   // Keys
-  taskblock.keys = [121,103,106]; // (check w/ http://keycode.info/)
+  taskblock.keys = [49,50]; // (check w/ http://keycode.info/)
 
   return taskblock
 }
