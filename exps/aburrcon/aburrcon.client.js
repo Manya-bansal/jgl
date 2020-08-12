@@ -27,47 +27,40 @@ function loadTask() {
   task[2].instructions = ['instruct-1', 'instruct-2', 'instruct-3', 'instruct-4'];
 
   // PRACTICE TRIALS
-  // task[2] = addTaskBlock(5, 1);
+  task[3] = addTaskBlock(1, 1);
 
   //Number of trials per block
-  nTrialsPerBlock = 20;
+  nTrialsPerBlock = 1;
   // INSTRUCTIONS BEFORE BEGINNING REAL TRIALS 
-  task[3] = {};
-  task[3].type = 'instructions';
-  task[3].variables = {};
-  task[3].instructions = ['instruct-block1'];
+  task[4] = {};
+  task[4].type = 'instructions';
+  task[4].variables = {};
+  task[4].instructions = ['instruct-block1'];
 
   // Start the real task: 20 trial blocks
-  task[4] = addTaskBlock(nTrialsPerBlock, 0);
+  task[5] = addTaskBlock(nTrialsPerBlock, 0);
 
   // First break
-  task[5] = {};
-  task[5].type = 'instructions';
-  task[5].variables = {};
-  task[5].instructions = ['instruct-block2'];
+  task[6] = {};
+  task[6].type = 'instructions';
+  task[6].variables = {};
+  task[6].instructions = ['instruct-block2'];
 
-  task[6] = addTaskBlock(nTrialsPerBlock, 0);
+  task[7] = addTaskBlock(nTrialsPerBlock, 0);
 
-  task[7] = {};
-  task[7].type = 'instructions';
-  task[7].variables = {};
-  task[7].instructions = ['instruct-block3'];
+  task[8] = {};
+  task[8].type = 'instructions';
+  task[8].variables = {};
+  task[8].instructions = ['instruct-block3'];
 
-  task[8] = addTaskBlock(nTrialsPerBlock, 0);
+  task[9] = addTaskBlock(nTrialsPerBlock, 0);
 
-  task[9] = {};
-  task[9].type = 'instructions';
-  task[9].variables = {};
-  task[9].instructions = ['instruct-block4'];
+  task[10] = {};
+  task[10].type = 'instructions';
+  task[10].variables = {};
+  task[10].instructions = ['instruct-block4'];
 
-  task[10] = addTaskBlock(nTrialsPerBlock, 0);
-
-  task[11] = {};
-  task[11].type = 'instructions';
-  task[11].variables = {};
-  task[11].instructions = ['instruct-block5'];
-
-  task[12] = addTaskBlock(nTrialsPerBlock, 0);
+  task[11] = addTaskBlock(nTrialsPerBlock, 0);
 
   return task;
 }
