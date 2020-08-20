@@ -37,7 +37,7 @@ function loadTask() {
   task[4].variables = {};
   task[4].instructions = ['instruct-block1'];
 
-  // Start the real task: 20 trial blocks
+  // Start the real task: 40 trial blocks
   task[5] = addTaskBlock(nTrialsPerBlock, 0, "low");
 
   // First break
@@ -65,6 +65,8 @@ function loadTask() {
   return task;
 }
 
+
+
 function addTaskBlock(numTrials, practice, runtype) {
   taskblock = {};
   taskblock.type = 'trial'; // this will give us use of the canvas
@@ -81,14 +83,12 @@ function addTaskBlock(numTrials, practice, runtype) {
   taskblock.parameters.practice = practice;
   taskblock.parameters.runtype = runtype;
   
-  if (runtype=="high"){
-    task.parameters.posdiff = [-15, -11, -9, 9, 11, 15];
-    window.posdiff = [-15, -11, -9, 9, 11, 15];
+  if (taskblock.parameters.runtype =="high"){
+    taskblock.parameters.posdiff = [-15, -11, -9, 9, 11, 15];
   } else{
-    task.parameters.possdiff = [-2, -5, -9, 9, 5, 2];
-    window.posdiff = [-2, -5, -9, 9, 5, 2];
+    taskblock.parameters.posdiff = [-2, -5, -9, 9, 5, 2];
   }
-
+  
   // Task Variables which get set on each trial
   taskblock.variables = {};
   taskblock.variables.key = NaN;
@@ -96,19 +96,18 @@ function addTaskBlock(numTrials, practice, runtype) {
   taskblock.variables.difference = NaN;
   taskblock.variables.initialConfidence = NaN;
   taskblock.variables.confidence = NaN;
- 
+  taskblock.variables.jitters = NaN;
 
   // Segment timing
-  taskblock.segnames = ['fixation','stim1','ISI', 'stim2', "response", "confdence", "ITI"];
-  taskblock.segmin = [1000, 10, 500, 10, 2000, 20000, 1000];
-  taskblock.segmax = [1000, 10, 500, 10, 2000, 20000, 1000];
+  taskblock.segnames = ['fixation','fixation','stim1','ISI', 'stim2', "response", "confidence", "ITI", "ITI"];
+  taskblock.segmin = [500,500, 15, 500, 15, Infinity, Infinity, 500, 500];
+  taskblock.segmax = [500,500, 15, 500, 15, Infinity, Infinity, 500, 500];
 
   // Responses - which segments should we look for a response.
-  taskblock.response = [0, 0, 0, 0, 1, 1, 0];
+  taskblock.response = [0, 0,0, 0, 0, 1, 1, 0, 0];
 
   // Trials
-  taskblock.numTrials = numTrials; // Specify number of trials according to input.
-
+  taskblock.numTrials = numTrials; 
   // Keys
   taskblock.keys = [49,50]; // (check w/ http://keycode.info/)
 
@@ -117,132 +116,172 @@ function addTaskBlock(numTrials, practice, runtype) {
 
 let fix, tex, texSprite, showResp, feedback_text;
 
+
 function startTrial() {
-  imgNames = ['face', 'jetplane', 'elephant', 'sand', 'lawn', 'dirt', 'tulips', 'fireworks', 'bananas'];
-  layerNames = ['pool1', 'pool2', 'pool4'];
-  pool_sizes = ['1x1', '2x2', '4x4'];
+  window.background = {};
 
-  // Randomly select an image to show on each trial.
-  jgl.trial.img_idx = Math.floor(Math.random()*imgNames.length);
-  jgl.trial.img_name = imgNames[jgl.trial.img_idx];
+  var i;
+  for (i = 1; i < 22; i++) {
+    index = i.toString();
+    window.background[index] = jglCreateTexture('exps/aburrcon/background/' + index + '.jpg');
 
-  // Randomly select a distractor layer to show on each trial
-  jgl.trial.layer_idx = Math.floor(Math.random()*layerNames.length);
-  jgl.trial.layer_name = layerNames[jgl.trial.layer_idx];
+  }
 
-  // Randomly select a pooling size to show on each trial.
-  jgl.trial.pool_idx = Math.floor(Math.random()*pool_sizes.length);
-  jgl.trial.poolsize = pool_sizes[jgl.trial.pool_idx]; 
-  console.log('Image: ' + jgl.trial.img_name + '; Layer: ' + jgl.trial.layer_name + '; pool_size: ' + jgl.trial.poolsize);
+  window.center = {};
 
-  // Randomly select the position (1,2, or 3) for the target.
-  jgl.trial.target_position = Math.floor(Math.random()*3);
+  for (i = 1; i < 4; i++) {
+    index = i.toString();
+    window.center[index] = jglCreateTexture('exps/aburrcon/center/' + index + '.jpg');
+  }
 
-  // Randomly select whether the original will be present on this trial.
-  jgl.trial.origPresent = Math.floor(Math.random()*2);
+  window.difference = {};
 
+  var difference = [-15, -11, -9, -5, -2, 5, 2, 9, 11, 15]
+
+  for (i = 0; i < difference.length; i++) {
+    index = difference[i].toString();
+    window.difference[index] = jglCreateTexture('exps/aburrcon/stim/' + index + '.jpg');
+  }
+
+
+  jgl.trial.center = Math.floor(Math.random()*2);
+  difference_index = Math.floor(Math.random()*6);
+  jgl.trial.difference = taskblock.parameters.posdiff[difference_index];
 }
 
 
 function startSegment() {
-  ecc = 250; // distance from center of visual field to place images
-  scl = 0.5; // scale factor to stretch / shrink images
 
-  // Create temporary variables to track fixation color.
-  jgl.active.fix = 0;
+  // ecc = 250; // distance from center of visual field to place images
+  // scl = 0.5; // scale factor to stretch / shrink images
+
+  // Setting fixation cross color
   jgl.active.fixColor = 0xFFFFFF;
   jgl.active.text = NaN;
+
   console.log(jgl.trial.segname);
-  switch (jgl.trial.segname){
-    case 'delay':
-      jgl.active.fix=1;
-      break; 
-    case 'stim':
-      jgl.active.fix=1;
 
-      xPos = [0, -ecc*Math.cos(30*Math.PI/180), ecc*Math.cos(30*Math.PI/180)];
-      yPos = [-ecc, ecc*Math.sin(30*Math.PI/180), ecc*Math.sin(30*Math.PI/180)];
-      distLocs = math.setDifference([0,1,2], [jgl.trial.target_position]);
-
-      // Load and display images
-      texDir = 'exps/texOdd/color/textures';
-      origDir = 'exps/texOdd/color/originals';
-      distPath = texDir + '/' + jgl.trial.poolsize + '_' + jgl.trial.layer_name + '_' + jgl.trial.img_name;
-      texD1 = jglCreateTexture(distPath + '_smp1.png');
-      texD2 = jglCreateTexture(distPath + '_smp2.png');
-
-      if (jgl.trial.origPresent==1){
-        texOdd= jglCreateTexture(origDir + '/' + jgl.trial.img_name + '.png');
-      } else {
-        texOdd = jglCreateTexture(distPath + '_smp3.png');
-      }
-      texSprite1 = jglBltTexture(texD1,xPos[distLocs[0]], yPos[distLocs[0]],0, scale=scl);
-      texSprite3 = jglBltTexture(texOdd,xPos[jgl.trial.target_position], yPos[jgl.trial.target_position],0, scale=scl);
-      texSprite2 = jglBltTexture(texD2,xPos[distLocs[1]], yPos[distLocs[1]],0, scale=scl);
-
-      //
-      showResp = false;
-
+  switch(jgl.trial.segname){
+    case 'fixation':
+      back_num = Math.floor(Math.random()* 21) +1;
+      tex = window.background[back_num.toString()];
+      rendered = jglBltTexture(tex);
       break;
-    case 'feedback':
-      jgl.active.fix=1;
-      jglDestroy(texSprite1); jglDestroy(texSprite3); jglDestroy(texSprite2);
-      if( jgl.trial.correct == 1 ){
-        jgl.active.fixColor=0x00FF00; // green for correct
-      } else{
-        jgl.active.fixColor=0xFF0000; // red for incorrect
+    case 'stim1':
+      if (jgl.trial.center==1){
+        back_num = Math.floor(Math.random()* 3) +1;
+        tex = window.center[back_num.toString()];
+        rendered = jglBltTexture(tex);
+      }else{
+        tex = window.difference[jgl.trial.difference.toString()];
+        console.log(jgl.trial.difference);
+        rendered = jglBltTexture(tex);
       }
       break;
-    case 'iti':
-      jgl.active.fix=1;
-      jglDestroy(feedback_text);
+    case 'stim2':
+      if (jgl.trial.center==1){
+        tex = window.difference[jgl.trial.difference.toString()];
+        rendered = jglBltTexture(tex);
+        console.log(jgl.trial.difference);
+      }else{
+        back_num = Math.floor(Math.random()* 3) +1;
+        tex = window.center[back_num.toString()];
+        rendered = jglBltTexture(tex);
+      }
+      break;
+    case 'ITI':
+      back_num = Math.floor(Math.random()* 21) +1;
+      tex = window.background[back_num.toString()];
+      rendered = jglBltTexture(tex);
+      break;
+    case 'ISI':
+      back_num = Math.floor(Math.random()* 21) +1;
+      tex = window.background[back_num.toString()];
+      rendered = jglBltTexture(tex);
+      break;
+    case 'confidence':
+      tex = jglCreateTexture('exps/aburrcon/black.jpg');
+      tex = jglBltTexture(tex);
+      eventListenerAdd("wheel", confidence)
+      eventListenerAdd("click", next);
+      break;
+    case "response":
+      back_num = Math.floor(Math.random()* 21) +1;
+      tex = window.background[back_num.toString()];
+      rendered = jglBltTexture(tex);
+      var texture = setInterval(displayBackground, 500);
+      function displayBackground(){
+        if (jgl.trial.segname=="response"){
+          back_num = Math.floor(Math.random()* 21) +1;
+          tex = window.background[back_num.toString()];
+          rendered = jglBltTexture(tex);
+        }else{
+          clearInterval(texture);
+        }
+      }
       break;
   }
 }
 
+let height = Math.random()*150;
+
+function confidence(event){
+
+  height += event.deltaY * -0.05;
+
+  // Restrict scale
+  height = Math.min(Math.max(.125, height), 150);
+}
+
+function next(){
+  jgl.trial.confidence = height/150.0;
+  height = Math.random()*150;
+  jumpSegment();
+}
+
 function updateScreen() { 
   // Draw fiation cross
-  if (jgl.active.fix) {
-    if (fix!=undefined){
-      fix.destroy();
-    }
-    fix=jglFixationCross(undefined, undefined, jgl.active.fixColor,[0,0]);
-  } 
-  
+  fix=jglFixationCross(undefined, undefined, jgl.active.fixColor,[0,0]);
+  jgl.usingVisualAngles = true;
   // Delay segment
-  if (jgl.trial.segname == 'delay') {
+  if (jgl.trial.segname == 'confidence') {
+    var graphics = new PIXI.Graphics();
+    graphics.beginFill(0x000000);
+    graphics.lineStyle(2, 0xFFFFFF);
+    graphics.pivot.y = graphics.height;
+    graphics.drawRect(-37.5, 75, 75, -150);
+    jgl.pixi.graphicsContainer.addChild(graphics);
+    var graphics = new PIXI.Graphics();
+    graphics.beginFill(0x808080);
+    graphics.lineStyle(2, 0xFFFFFF);
+    graphics.pivot.y = graphics.height;
+    graphics.drawRect(-37.5, 75, 75, height*-1);
+    jgl.pixi.graphicsContainer.addChild(graphics);
   }
 
-
-  // Stimulus segment
-
-  // Feedback segment (draw text feedback to screen)
-  if (jgl.trial.segname == 'feedback' && !showResp){
-    showResp = true;
-    if (jgl.trial.correct == 1){
-      jglTextSet('Arial', 1, '#00ff00');
-      feedback_text=jglTextDraw("Correct response",0,-2);
-      jgl.active.fixColor=0x00FF00;
-    } else {
-      jglTextSet('Arial', 1, '#ff0000');
-      feedback_text=jglTextDraw('Incorrect response', 0, -2);
-      jgl.active.fixColor=0xFF0000;
-    }
-  }
 }
 
 function getResponse() {
   taskblock = addTaskBlock(1,1);
   jgl.trial.key = jgl.event.key.keyCode;
-  //console.log(jgl.trial.key);
-  //console.log(taskblock.keys[jgl.trial.target_position]);
-  if (jgl.trial.key == taskblock.keys[jgl.trial.target_position]) {
+  if (jgl.trial.key == 49 && jgl.trial.center==1 && jgl.trial.difference > 0) {
     console.log('Correct');
     jgl.trial.correct = 1;
     jumpSegment();
-  }
-  else{
-    console.log('Incorrect :(');
+  }else if (jgl.trial.key == 50 && jgl.trial.center==1 && jgl.trial.difference < 0){
+    console.log('Correct');
+    jgl.trial.correct = 1;
+    jumpSegment();
+  }else if (jgl.trial.key == 49 && jgl.trial.center!=1 && jgl.trial.difference < 0){
+  console.log('Correct');
+  jgl.trial.correct = 1;
+  jumpSegment();
+  }else if (jgl.trial.key == 50 && jgl.trial.center!=1 && jgl.trial.difference > 0){
+  console.log('Correct');
+  jgl.trial.correct = 1;
+  jumpSegment();
+  }else{
+    console.log('Incorrect');
     jgl.trial.correct = 0;
     jumpSegment();
   }
